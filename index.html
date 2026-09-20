@@ -123,6 +123,12 @@ button:active{filter:brightness(1.15)}
 .qr{width:min(44vh,300px);height:auto;aspect-ratio:1;image-rendering:pixelated;background:#fff;border-radius:10px}
 .cam{width:min(44vh,300px);aspect-ratio:1;object-fit:cover;background:#000;border-radius:10px;border:3px solid var(--cyan)}
 .plist.res{width:min(520px,90vw)}
+.sortbox{display:inline-block;margin:4px 0}.slots{display:flex;gap:clamp(6px,1.6vw,12px);justify-content:center;flex-wrap:wrap}
+.slot,.tile{font:inherit;min-width:clamp(62px,15vh,96px);height:clamp(42px,11.5vh,62px);border-radius:12px;font-size:clamp(20px,6.4vh,32px);color:#fff;padding:0 8px}
+.slot{border:3px dashed var(--cyan);background:rgba(255,255,255,.06)}.slot.filled{border:3px solid var(--cyan);background:linear-gradient(#2a86ff,#0b3a9c)}
+.slot.ok{border-color:#c9ffd9;background:linear-gradient(#5be38a,#1c9a4a)}.slot.bad{border-color:#ffd0d0;background:linear-gradient(#ff7a7a,#b02020)}
+.tile{border:3px solid #ffe36b;background:linear-gradient(#ffb400,#c77a00);box-shadow:0 4px 0 #6b4200;color:#3a2200}.tile:disabled{opacity:.25;box-shadow:none}
+.ends{display:flex;justify-content:space-between;font-size:clamp(11px,3.2vh,15px);color:#bfe4ff;margin-top:2px;text-transform:uppercase}.tray{margin-top:6px}
 @media (orientation:portrait) and (max-aspect-ratio:20/21){#rotate{display:flex}}
 @media (prefers-reduced-motion:reduce){#toast{transition:none}}
 </style></head><body>
@@ -172,10 +178,16 @@ button:active{filter:brightness(1.15)}
  <div class="row"><button id="retryBtn" class="big" style="font-size:clamp(20px,6vh,32px)">TRY AGAIN</button><button id="oMenuBtn" class="mid">Menu</button></div></div></section>
 
 <section id="quiz" class="screen hide"><div class="panel qpanel"><div class="qwhy" id="qWhy">Boom!</div>
- <div class="sub">Math Challenge! Pick the correct sign to keep your heart.</div>
+<div class="sub" id="qSub">Math Challenge! Pick the correct sign to keep your heart.</div>
+ <div id="qCmp">
  <div class="eq"><span id="qA">000</span><span id="qSign" class="qsign">?</span><span id="qB">000</span></div>
  <div class="qbtns"><button class="qb" data-s="<"><b>&lt;</b><small>Less than</small></button><button class="qb" data-s="="><b>=</b><small>Equal to</small></button><button class="qb" data-s=">"><b>&gt;</b><small>Greater than</small></button></div>
  <div id="qHint" class="qhint">Tip: compare the hundreds first, then the tens, then the ones.</div>
+ </div>
+ <div id="qSort" class="hide"><div class="sortbox"><div id="qSlots" class="slots"></div><div class="ends"><span id="qEndL">lowest</span><span id="qEndR">highest</span></div></div>
+ <div class="qhint" style="margin:4px 0">Tap the numbers below in the right order. Tap a box to take a number back.</div>
+ <div id="qTray" class="slots tray"></div>
+ <div class="row" style="margin-top:8px"><button id="qUndo" class="mid sm">Reset</button><button id="qCheck" class="big" style="font-size:clamp(16px,5vh,26px)" disabled>CHECK</button></div></div>
  <div id="qRes" class="qres"></div><button id="qCont" class="big hide" style="font-size:clamp(18px,5.5vh,28px)">CONTINUE</button></div></section>
 <section id="raceHome" class="screen hide"><div class="panel"><h2>Race with friends</h2>
  <div class="sub">2–5 players &bull; same Wi-Fi &bull; no internet needed</div>
@@ -666,21 +678,65 @@ function loseHeart(kind) {
 /* ---- math challenge: compare two 3-digit numbers ---- */
 let Q = null;
 const rnd3 = () => 100 + Math.floor(Math.random() * 900);
+function shuffleArr(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function askQuiz(kind, why) {
+  const sortQ = Math.random() < 0.5;
+  Q = { kind, type: sortQ ? 'sort' : 'cmp', done: false, ok: false };
+  S.mode = 'quiz'; inp.left = inp.right = inp.nitro = inp.jumpQ = false;
+  $('controls').classList.add('hide'); $('qWhy').textContent = why;
+  $('qRes').textContent = ''; $('qRes').className = 'qres'; $('qCont').classList.add('hide');
+  $('qCmp').classList.toggle('hide', sortQ); $('qSort').classList.toggle('hide', !sortQ);
+  if (sortQ) setupSort(); else setupCmp();
+  show('quiz'); sfx.warn();
+}
+function setupCmp() {
   let a = rnd3(), b, t = Math.random();
   if (t < 0.25) b = a;
   else if (t < 0.65) { b = Math.max(100, Math.min(999, a + Math.floor(Math.random() * 101) - 50)); if (b === a) b = a < 999 ? a + 1 : a - 1; }
   else { do { b = rnd3(); } while (b === a); }
-  Q = { a, b, kind, ans: a < b ? '<' : a > b ? '>' : '=', done: false, ok: false };
-  S.mode = 'quiz'; inp.left = inp.right = inp.nitro = inp.jumpQ = false;
-  $('controls').classList.add('hide');
-  $('qWhy').textContent = why; $('qA').textContent = a; $('qB').textContent = b; $('qSign').textContent = '?';
-  $('qSign').className = 'qsign'; $('qRes').textContent = ''; $('qRes').className = 'qres'; $('qHint').classList.remove('hide'); $('qCont').classList.add('hide');
+  Object.assign(Q, { a, b, ans: a < b ? '<' : a > b ? '>' : '=' });
+  $('qSub').textContent = 'Math Challenge! Pick the correct sign to keep your heart.';
+  $('qA').textContent = a; $('qB').textContent = b; $('qSign').textContent = '?'; $('qSign').className = 'qsign'; $('qHint').classList.remove('hide');
   document.querySelectorAll('.qb').forEach((x) => { x.className = 'qb'; x.disabled = false; });
-  show('quiz'); sfx.warn();
+}
+/* ---- number sorting challenge: 3 to 5 random numbers, lowest->highest or highest->lowest ---- */
+function setupSort() {
+  const n = 3 + Math.floor(Math.random() * 3), nums = [];
+  while (nums.length < n) { const v = 10 + Math.floor(Math.random() * 990); if (nums.indexOf(v) < 0) nums.push(v); } // 10 to 999
+  const asc = Math.random() < 0.5, target = nums.slice().sort((x, y) => (asc ? x - y : y - x)); let tray;
+  do { tray = shuffleArr(nums.slice()); } while (tray.every((v, i) => v === target[i]));
+  Object.assign(Q, { asc, target, tray, placed: [], n });
+  $('qSub').textContent = 'Math Challenge! Sort the ' + n + ' numbers from ' + (asc ? 'LOWEST to HIGHEST' : 'HIGHEST to LOWEST') + '.';
+  $('qEndL').textContent = asc ? 'lowest' : 'highest'; $('qEndR').textContent = asc ? 'highest' : 'lowest';
+  renderSort();
+}
+function renderSort() {
+  const slots = $('qSlots'), tray = $('qTray'); slots.innerHTML = ''; tray.innerHTML = '';
+  for (let i = 0; i < Q.n; i++) {
+    const b = document.createElement('button'), pi = Q.placed[i], has = pi !== undefined; b.className = 'slot' + (has ? ' filled' : ''); b.textContent = has ? Q.tray[pi] : String(i + 1);
+    if (Q.done) { b.disabled = true; b.classList.add(has && Q.tray[pi] === Q.target[i] ? 'ok' : 'bad'); }
+    else if (has) b.addEventListener('click', () => { ensureAudio(); sfx.click(); Q.placed.splice(i, 1); renderSort(); });
+    slots.appendChild(b);
+  }
+  Q.tray.forEach((v, i) => {
+    const b = document.createElement('button'); b.className = 'tile'; b.textContent = v; b.disabled = Q.done || Q.placed.indexOf(i) >= 0;
+    b.addEventListener('click', () => { if (Q.done || Q.placed.length >= Q.n) return; ensureAudio(); sfx.click(); Q.placed.push(i); renderSort(); });
+    tray.appendChild(b);
+  });
+  const full = Q.placed.length === Q.n; $('qCheck').disabled = !full || Q.done; $('qCheck').style.opacity = full && !Q.done ? 1 : 0.45; $('qUndo').classList.toggle('hide', Q.done);
+  $('qCheck').classList.toggle('hide', Q.done);
+}
+function checkSort() {
+  if (!Q || Q.type !== 'sort' || Q.done || Q.placed.length !== Q.n) return; Q.done = true;
+  const vals = Q.placed.map((i) => Q.tray[i]); Q.ok = vals.every((v, i) => v === Q.target[i]); S.qt++; if (Q.ok) S.qc++;
+  renderSort();
+  const chain = Q.target.join(Q.asc ? ' < ' : ' > ');
+  $('qRes').textContent = (Q.ok ? 'Correct! Your heart is safe. ' : 'Not quite \u2013 you lose a heart. Right order: ') + chain;
+  $('qRes').className = 'qres ' + (Q.ok ? 'good' : 'bad'); $('qCont').classList.remove('hide');
+  if (Q.ok) sfx.star(); else sfx.hit();
 }
 function answerQuiz(sign) {
-  if (!Q || Q.done) return; Q.done = true; Q.ok = sign === Q.ans; S.qt++; if (Q.ok) S.qc++;
+  if (!Q || Q.done || Q.type !== 'cmp') return; Q.done = true; Q.ok = sign === Q.ans; S.qt++; if (Q.ok) S.qc++;
   document.querySelectorAll('.qb').forEach((x) => { x.disabled = true; if (x.dataset.s === Q.ans) x.classList.add('ok'); else if (x.dataset.s === sign) x.classList.add('bad'); });
   $('qSign').textContent = Q.ans; $('qSign').className = 'qsign ' + (Q.ok ? 'good' : 'bad');
   const A = String(Q.a), B = String(Q.b), names = ['hundreds', 'tens', 'ones']; let why = 'All the digits match, so the numbers are equal!';
@@ -1817,6 +1873,8 @@ document.querySelectorAll('.snd').forEach((b) => b.addEventListener('click', () 
 on('pauseBtn', () => { if (S.race) { if (confirm('Leave the race?')) startMenu(); } else pauseGame(); });
 document.querySelectorAll('.qb').forEach((b) => b.addEventListener('click', () => { ensureAudio(); sfx.click(); answerQuiz(b.dataset.s); }));
 on('qCont', finishQuiz);
+on('qCheck', checkSort);
+on('qUndo', () => { if (Q && Q.type === 'sort' && !Q.done) { Q.placed = []; renderSort(); } });
 on('resumeBtn', resumeGame);
 on('restartBtn', () => startLevel(S.idx));
 on('pMenuBtn', () => { persist(); startMenu(); });
@@ -2064,7 +2122,7 @@ S.view = NEXTV[save.view] ? save.view : 'side'; $('viewBtn').textContent = VLAB[
 on('viewBtn', () => setView(NEXTV[S.view]));
 on('gaView', () => { setView(NEXTV[S.view]); buildGarage(); });
 setSoundUI(); setCoinTxt(); startMenu(); requestAnimationFrame(frame);
-window.__zion = { S, startLevel, inp, save, NET, drawPreview3D, SKINS };
+window.__zion = { askQuiz, getQ: () => Q, S, startLevel, inp, save, NET, drawPreview3D, SKINS };
 })();
 </script>
 <script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script></body></html>
