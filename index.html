@@ -65,7 +65,7 @@ h2{font-size:clamp(24px,8vh,44px);color:var(--gold);text-shadow:0 3px 0 #a55a00}
 .round.muted{filter:grayscale(1);opacity:.7}.round.muted:after{content:"";position:absolute;width:60%;height:3px;background:#ff5a5a;transform:rotate(-45deg)}
 .round{position:relative}
 .bank{position:fixed;left:0;top:max(8px,env(safe-area-inset-top))}
-button{cursor:pointer;color:inherit}
+button{cursor:pointer;color:inherit;touch-action:manipulation}
 button:active{filter:brightness(1.15)}
 :focus-visible{outline:3px solid #fff;outline-offset:2px}
 /* levels */
@@ -388,7 +388,8 @@ const cv = $('cv'), ctx = cv.getContext('2d');
 const VH = 540; let VW = 960, sc = 1;
 function resize() {
   const w = innerWidth, h = innerHeight, d = Math.min(window.devicePixelRatio || 1, 2);
-  cv.width = Math.round(w * d); cv.height = Math.round(h * d);
+  const k = Math.min(1, 720 / (h * d)); // cap render resolution so big tablets stay smooth
+  cv.width = Math.round(w * d * k); cv.height = Math.round(h * d * k);
   sc = cv.height / VH; VW = cv.width / sc;
 }
 addEventListener('resize', resize); resize();
