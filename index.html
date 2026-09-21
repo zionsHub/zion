@@ -133,6 +133,9 @@ button:active{filter:brightness(1.15)}
 #controls.steer #bL,#controls.steer #bR{left:auto}#controls.steer #bL{right:calc(max(18px,env(safe-area-inset-right)) + var(--b)*2 + 32px)}#controls.steer #bR{right:calc(max(18px,env(safe-area-inset-right)) + var(--b) + 16px)}
 #controls.steer #bL svg{fill:#ffc4c4}#controls.steer #bR svg{fill:#c4ffd6}#controls.steer #bL:after,#controls.steer #bR:after{position:absolute;bottom:6px;font-size:clamp(9px,2.6vh,12px);font-style:normal;letter-spacing:.5px;color:#fff}#controls.steer #bL:after{content:"BRAKE"}#controls.steer #bR:after{content:"GAS"}
 #ver{position:fixed;left:0;right:0;bottom:max(6px,env(safe-area-inset-bottom));text-align:center;font-size:clamp(10px,2.8vh,13px);font-style:normal;letter-spacing:.06em;color:rgba(255,255,255,.75);text-shadow:0 1px 2px rgba(0,0,0,.6);pointer-events:none}
+.roomcode{font-size:clamp(34px,13vh,68px);letter-spacing:.12em;color:var(--gold);text-shadow:0 3px 0 #a55a00;font-style:normal}
+.codein{font:inherit;font-size:clamp(24px,8vh,40px);text-align:center;letter-spacing:.2em;text-transform:uppercase;color:#fff;background:#0b2f7a;border:3px solid var(--cyan);border-radius:14px;padding:6px 12px;width:min(340px,80vw);margin:6px 0 10px;-webkit-user-select:text;user-select:text}
+#joinPop{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;background:rgba(3,10,30,.6)}
 @media (orientation:portrait) and (max-aspect-ratio:20/21){#rotate{display:flex}}
 @media (prefers-reduced-motion:reduce){#toast{transition:none}}
 </style></head><body>
@@ -204,7 +207,7 @@ button:active{filter:brightness(1.15)}
 
 <section id="hostLobby" class="screen hide"><div class="panel wide scroll scrollp"><h2>Race lobby</h2>
  <div class="lobbycols"><div id="hlList" class="plist"></div>
- <div class="lobbyctl"><div class="sub" style="margin:0">Vehicle (everyone drives this)</div><div class="row"><button id="hlVehPrev" class="round tx" aria-label="Previous vehicle">&lsaquo;</button><b id="hlVeh" class="vehname">Zion Rover</b><button id="hlVehNext" class="round tx" aria-label="Next vehicle">&rsaquo;</button></div><canvas id="hlPrev3" class="vprev" width="220" height="150"></canvas><button id="hlColor" class="mid sm">My color</button><div class="sub" style="margin:0">Track</div><div class="row"><button id="hlPrev" class="round tx" aria-label="Previous track">&lsaquo;</button><b id="hlLvl" class="lvbig">1-1</b><button id="hlNext" class="round tx" aria-label="Next track">&rsaquo;</button></div>
+ <div class="lobbyctl"><div class="sub" style="margin:0">Room code: <b id="hlRoom" style="color:var(--gold);letter-spacing:.12em">------</b></div><div class="sub" style="margin:0">Vehicle (everyone drives this)</div><div class="row"><button id="hlVehPrev" class="round tx" aria-label="Previous vehicle">&lsaquo;</button><b id="hlVeh" class="vehname">Zion Rover</b><button id="hlVehNext" class="round tx" aria-label="Next vehicle">&rsaquo;</button></div><canvas id="hlPrev3" class="vprev" width="220" height="150"></canvas><button id="hlColor" class="mid sm">My color</button><div class="sub" style="margin:0">Track</div><div class="row"><button id="hlPrev" class="round tx" aria-label="Previous track">&lsaquo;</button><b id="hlLvl" class="lvbig">1-1</b><button id="hlNext" class="round tx" aria-label="Next track">&rsaquo;</button></div>
  <button id="hlAdd" class="mid">+ Add player</button><button id="hlStart" class="big" style="font-size:clamp(20px,6vh,32px)">START</button></div></div>
  <div class="row2"><button id="hlLeave" class="mid">Leave</button></div></div></section>
 
@@ -226,6 +229,16 @@ button:active{filter:brightness(1.15)}
  <div class="row2"><button id="rrLobby" class="big hide" style="font-size:clamp(18px,5vh,26px)">BACK TO LOBBY</button><button id="rrLeave" class="mid">Leave</button></div></div></section>
 
 <section id="colorPick" class="screen hide"><div class="panel scroll scrollp"><h2>Pick your color</h2><div class="sub">Every player needs a different color</div><div id="cpGrid" class="cpg"></div><div class="row2"><button id="cpBack" class="mid">Back</button></div></div></section>
+<section id="hostRoom" class="screen hide"><div class="panel wide"><h2>Add friends</h2><div class="sub" id="hrStatus"></div>
+ <div class="pair"><div class="pcol"><b>Room code</b><div id="hrCode" class="roomcode">------</div><small class="tip">Friends tap &ldquo;Join a race&rdquo; and type this code</small></div>
+ <div class="pcol"><b>or scan</b><canvas id="hrQR" class="qr" style="width:min(34vh,220px)"></canvas></div></div>
+ <div class="tip">A pop-up will ask you to accept each friend. Quick join uses a small free internet relay only to pass the join request &ndash; the race itself stays on your Wi-Fi.</div>
+ <div class="row2"><button id="hrOffline" class="mid sm">No internet? Offline QR pairing</button><button id="hrBack" class="mid">Back to lobby</button></div></div></section>
+<section id="joinCode" class="screen hide"><div class="panel"><h2>Join a race</h2><div class="sub" id="jcStatus">Ask the host for the 6-character room code.</div>
+ <input id="jcIn" maxlength="6" placeholder="ROOM CODE" autocomplete="off" autocapitalize="characters" class="codein">
+ <div class="row"><button id="jcGo" class="big" style="font-size:clamp(18px,5.5vh,28px)">JOIN</button></div>
+ <div class="row2"><button id="jcScan" class="mid sm">Scan host QR</button><button id="jcOffline" class="mid sm">Offline pairing</button><button id="jcBack" class="mid">Back</button></div></div></section>
+<div id="joinPop" class="hide"><div class="panel"><h2 id="jpTitle">Someone wants to join</h2><div class="sub">Add them to your race?</div><div class="row"><button id="jpYes" class="big" style="font-size:clamp(18px,5.5vh,28px)">ACCEPT</button><button id="jpNo" class="mid">Decline</button></div></div></div>
 <div id="cd"></div>
 <div id="rotate"><svg viewBox="0 0 24 24"><path d="M16.500 3H7.500A2.500 2.500 0 0 0 5 5.500v13A2.500 2.500 0 0 0 7.500 21h9a2.500 2.500 0 0 0 2.500-2.500v-13A2.500 2.500 0 0 0 16.500 3zM12 20a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>Turn your phone sideways to play<br><small style="font-size:16px;color:#bfe4ff">Landscape mode</small></div>
 <script>
@@ -586,7 +599,12 @@ function steerNow() { return !!S.L && !S.L.rail && S.mode !== 'menu' && effView(
 function roadW3() { const nl = S.race ? Object.keys(NET.players).length : 1; return S.L && S.L.rail ? Math.max(170, nl * 74 + 70) : Math.max(360, nl * 90 + 80); }
 function effView() { return S.mode === 'menu' ? 'side' : S.view; }
 function syncViewBtn() { $('viewBtn').classList.remove('hide'); }
-if (!save.v || save.v < 2) { [10, 11, 12].forEach((k) => { delete save.stars[k]; }); save.v = 2; save.tUnlocked = save.tUnlocked || 1; }
+function fixUnlocks() { // a level is open once the one before it has been finished (repairs older saves)
+  let u = save.unlocked || 1; for (let i = 1; i <= 9; i++) if ((save.stars[i] || 0) > 0) u = Math.max(u, i + 1); save.unlocked = Math.min(10, u);
+  let t = save.tUnlocked || 1; for (let i = 21; i <= 29; i++) if ((save.stars[i] || 0) > 0) t = Math.max(t, i - 19); save.tUnlocked = Math.min(10, t);
+}
+if (!save.v || save.v < 3) { [10, 11, 12].forEach((k) => { delete save.stars[k]; }); save.v = 3; }
+fixUnlocks();
 function persist() { try { localStorage.setItem('zion_save_v1', JSON.stringify(save)); } catch (e) {} }
 
 /* ---------- audio (synthesised, no files) ---------- */
@@ -643,7 +661,7 @@ const hash = (n) => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return
 const lvlName = (i) => (i >= 20 ? 'T-' + (i - 19) : Math.ceil(i / 3) + '-' + (((i - 1) % 3) + 1));
 
 /* ---------- UI helpers ---------- */
-const screens = ['colorPick', 'menu', 'levels', 'garage', 'pause', 'win', 'over', 'quiz', 'raceHome', 'hostLobby', 'hostAdd', 'joinFlow', 'guestLobby', 'raceRes'];
+const screens = ['hostRoom', 'joinCode', 'colorPick', 'menu', 'levels', 'garage', 'pause', 'win', 'over', 'quiz', 'raceHome', 'hostLobby', 'hostAdd', 'joinFlow', 'guestLobby', 'raceRes'];
 function show(id) { screens.forEach((s) => $(s).classList.toggle('hide', s !== id)); if (id !== 'raceRes' && NET.rrTimer) { clearInterval(NET.rrTimer); NET.rrTimer = 0; } if (id !== 'hostAdd' && id !== 'joinFlow') stopScan(); }
 function hud(on) { $('hud').classList.toggle('hide', !on); $('controls').classList.toggle('hide', !on); }
 function toast(msg, ms) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); S.toastT = ms || 1.6; }
@@ -1971,6 +1989,7 @@ addEventListener('blur', () => pauseGame());
 function on(id, fn) { $(id).addEventListener('click', (e) => { ensureAudio(); sfx.click(); fn(e); }); }
 let LVTAB = 'road';
 function buildLevels() {
+  fixUnlocks(); persist();
   const box = $('lvGrid'); box.innerHTML = ''; $('tabRoad').classList.toggle('on', LVTAB === 'road'); $('tabTrain').classList.toggle('on', LVTAB === 'train');
   const ids = LVTAB === 'train' ? [21, 22, 23, 24, 25, 26, 27, 28, 29, 30] : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
   for (const i of ids) {
@@ -2060,6 +2079,7 @@ function commitName() { const v = ($('nameIn').value || '').trim().slice(0, 10);
 function netSend(p, msg) { try { if (p.dc && p.dc.readyState === 'open') p.dc.send(JSON.stringify(msg)); } catch (e) {} }
 function netBroadcast(msg, except) { for (const p of NET.peers) if (p !== except) netSend(p, msg); }
 function netReset() {
+  if (NET.room) { try { NET.room.h && NET.room.h.close(); } catch (e) {} NET.room = null; } if (NET.gh) { try { NET.gh.close(); } catch (e) {} NET.gh = null; } $('joinPop').classList.add('hide');
   for (const p of NET.peers) { try { p.pc.close(); } catch (e) {} }
   if (NET.pending) { try { NET.pending.pc.close(); } catch (e) {} }
   stopScan(); NET.peers = []; NET.players = {}; NET.meId = 0; NET.role = null; NET.lvl = 1; NET.veh = 0; NET.pending = null;
@@ -2109,7 +2129,7 @@ function onNetMsg(peer, raw) {
     NET.lvl = m.l | 0 || 1; NET.veh = m.v | 0; const seen = {};
     for (const q of m.ps) { seen[q.i] = 1; const p = plr(q.i); p.n = q.n; p.k = q.k; }
     for (const id of Object.keys(NET.players)) if (!seen[id]) delete NET.players[id];
-    if (!$('joinFlow').classList.contains('hide')) { stopScan(); show('guestLobby'); }
+    if (!$('joinFlow').classList.contains('hide') || !$('joinCode').classList.contains('hide')) { stopScan(); show('guestLobby'); }
     renderLobby();
   } else if (m.t === 's') { NET.lvl = m.l | 0 || 1; startLevel(NET.lvl, true); }
   else if (m.t === 'e') { if (S.race) toLobby(); }
@@ -2147,7 +2167,7 @@ async function startScan(video, onCode) {
     if (!video.videoWidth) return; const k = Math.min(1, 480 / video.videoWidth), w = Math.round(video.videoWidth * k), h = Math.round(video.videoHeight * k);
     scanCv.width = w; scanCv.height = h; cx.drawImage(video, 0, 0, w, h);
     const c = jsQR(cx.getImageData(0, 0, w, h).data, w, h, { inversionAttempts: 'dontInvert' });
-    if (c && c.data && c.data.indexOf('Z1|') === 0) { stopScan(); onCode(c.data); }
+    if (c && c.data && /^(Z1|ZR1)\|/.test(c.data)) { stopScan(); onCode(c.data); }
   }, 180);
 }
 function scanFor(id, cb, noteId) {
@@ -2166,6 +2186,7 @@ function renderLobby() {
     row.append(dot, nm, st); box.appendChild(row);
   }
   const myK = NET.players[NET.meId] ? NET.players[NET.meId].k : 0, pv = $(host ? 'hlPrev3' : 'glPrev3'); $(host ? 'hlVeh' : 'glVeh').textContent = VEHS[NET.veh].n; if (pv) drawPreview3D(pv, NET.veh, myK, true);
+  updateRoomUI();
   if (host) { $('hlLvl').textContent = lvlName(NET.lvl); $('hlStart').disabled = count < 2; $('hlAdd').disabled = count >= 5; $('hlStart').style.opacity = count < 2 ? 0.5 : 1; }
   else $('glLvl').textContent = lvlName(NET.lvl);
 }
@@ -2192,7 +2213,7 @@ async function hostFinish(peer, code) {
 /* --- guest flow --- */
 function joinStart() {
   NET.role = 'guest'; show('joinFlow'); $('jfStep1').classList.remove('hide'); $('jfStep2').classList.add('hide'); $('jfStatus').textContent = 'Point the camera at the host\u2019s QR code.';
-  scanFor('jfVideo', joinWithCode, 'jfStatus');
+  scanFor('jfVideo', (code) => (code.indexOf('ZR1|') === 0 ? joinRoom(code.slice(4)) : joinWithCode(code)), 'jfStatus');
 }
 async function joinWithCode(code) {
   stopScan(); $('jfStatus').textContent = 'Connecting\u2026';
@@ -2261,12 +2282,98 @@ function toLobby() {
   if (NET.role === 'host') netBroadcast({ t: 'e' });
   startMenu(true); showLobby();
 }
+/* --- quick join through a small public relay (used only to pass the join request; game data stays on the Wi-Fi) --- */
+const RCH = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const makeRoomCode = () => { let s = ''; for (let i = 0; i < 6; i++) s += RCH[Math.floor(Math.random() * RCH.length)]; return s; };
+const relayUrl = () => window.ZION_RELAY || 'https://ntfy.sh';
+const Relay = {
+  open(topic, onMsg, onState) {
+    let es; try { es = new EventSource(relayUrl() + '/' + topic + '/sse'); } catch (e) { return null; }
+    es.onmessage = (ev) => { try { const d = JSON.parse(ev.data); if (d.event && d.event !== 'message') return; onMsg(JSON.parse(d.message)); } catch (e) {} };
+    es.onopen = () => onState && onState('open'); es.onerror = () => onState && onState('error');
+    return { close() { try { es.close(); } catch (e) {} } };
+  },
+  async publish(topic, obj) { const r = await fetch(relayUrl() + '/' + topic, { method: 'POST', body: JSON.stringify(obj) }); if (!r.ok) throw new Error('relay ' + r.status); }
+};
+const relayPub = (room, suffix, obj) => Relay.publish('zionrace-' + room.code + '-' + suffix, obj).catch(() => {});
+function startRoom() {
+  if (NET.room) return; const room = NET.room = { code: makeRoomCode(), h: null, state: 'connecting', reqs: {}, queue: [], cur: null };
+  room.h = Relay.open('zionrace-' + room.code + '-r', onRoomMsg, (s) => { room.state = s; updateRoomUI(); });
+  if (!room.h) room.state = 'error'; updateRoomUI();
+}
+function updateRoomUI() {
+  const r = NET.room; if ($('hlRoom')) $('hlRoom').textContent = r ? r.code : '------';
+  if ($('hrStatus')) $('hrStatus').textContent = !r ? '' : r.state === 'error' ? 'Cannot reach the internet relay. Use offline QR pairing instead.' : 'Waiting for friends\u2026 they tap \u201cJoin a race\u201d and enter this code.';
+}
+function openRoom() { if (!NET.room) startRoom(); show('hostRoom'); $('hrCode').textContent = NET.room.code; drawQR($('hrQR'), 'ZR1|' + NET.room.code); updateRoomUI(); }
+function onRoomMsg(m) {
+  const room = NET.room; if (!room || !m || typeof m !== 'object') return; const gid = String(m.g || '').toUpperCase(); if (!/^[A-Z0-9]{6}$/.test(gid)) return;
+  if (m.t === 'join') {
+    if (room.reqs[gid]) return;
+    const busy = Object.values(room.reqs).filter((q) => q.st === 'creating' || q.st === 'offered' || q.st === 'connecting').length;
+    if (S.race || Object.keys(NET.players).length + busy >= 5) { relayPub(room, 'o', { t: 'deny', g: gid, r: 'full' }); return; }
+    room.reqs[gid] = { gid, name: String(m.n || 'Player').slice(0, 10), st: 'ask' }; room.queue.push(gid); showJoinPop();
+  } else if (m.t === 'answer') { const q = room.reqs[gid]; if (q && q.st === 'offered' && typeof m.c === 'string') finishRoomJoin(q, m.c); }
+}
+function showJoinPop() {
+  const room = NET.room; if (!room || !$('joinPop').classList.contains('hide')) return;
+  while (room.queue.length) { const q = room.reqs[room.queue.shift()]; if (!q || q.st !== 'ask') continue; room.cur = q; $('jpTitle').textContent = q.name + ' wants to join'; $('joinPop').classList.remove('hide'); sfx.power(); return; }
+}
+async function answerJoinPop(yes) {
+  const room = NET.room, q = room && room.cur; $('joinPop').classList.add('hide'); if (!q) return; room.cur = null;
+  if (!yes) { delete room.reqs[q.gid]; relayPub(room, 'o', { t: 'deny', g: q.gid }); showJoinPop(); return; }
+  q.st = 'creating';
+  try {
+    const used = new Set([0].concat(NET.peers.map((p) => p.id), Object.values(room.reqs).filter((r) => r.peer).map((r) => r.peer.id))); let id = 1; while (used.has(id) && id < 5) id++; if (id >= 5) throw new Error('full');
+    const peer = await ZNet.hostOffer(); peer.id = id; q.peer = peer; q.st = 'offered';
+    await Relay.publish('zionrace-' + room.code + '-o', { t: 'offer', g: q.gid, c: peer.code });
+    q.timer = setTimeout(() => { if (q.st === 'offered') { try { q.peer.pc.close(); } catch (e) {} delete room.reqs[q.gid]; toast(q.name + ' did not connect', 2); } }, 45000);
+  } catch (e) { if (q.peer) { try { q.peer.pc.close(); } catch (x) {} } delete room.reqs[q.gid]; relayPub(room, 'o', { t: 'deny', g: q.gid }); toast('Could not add ' + q.name, 2); }
+  showJoinPop();
+}
+async function finishRoomJoin(q, code) {
+  const room = NET.room; clearTimeout(q.timer); q.st = 'connecting';
+  try { attachPeer(q.peer); await ZNet.hostAccept(q.peer, code); await waitOpen(q.peer.dc, 25000); NET.peers.push(q.peer); delete room.reqs[q.gid]; }
+  catch (e) { NET.lastErr = String(e && e.stack || e); try { q.peer.pc.close(); } catch (x) {} if (room) delete room.reqs[q.gid]; toast('Could not connect ' + q.name + '. Same Wi-Fi?', 2.6); }
+}
+function joinCodeStart() { NET.role = 'guest'; show('joinCode'); $('jcStatus').textContent = 'Ask the host for the 6-character room code.'; $('jcIn').value = ''; }
+async function joinRoom(codeIn) {
+  const code = String(codeIn || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (code.length !== 6) { toast('Enter the 6-character room code', 2); return; }
+  netReset(); NET.role = 'guest'; show('joinCode');
+  const st = (t) => { $('jcStatus').textContent = t; }, gid = makeRoomCode(); st('Connecting\u2026');
+  let done = false, offerTimer = 0, openRes; const opened = new Promise((res) => { openRes = res; });
+  const fail = (msg) => { done = true; clearTimeout(offerTimer); if (NET.gh) { try { NET.gh.close(); } catch (e) {} NET.gh = null; } st(msg); toast(msg, 2.8); };
+  NET.gh = Relay.open('zionrace-' + code + '-o', async (m) => {
+    if (done || !m || m.g !== gid) return;
+    if (m.t === 'deny') { fail(m.r === 'full' ? 'The room is full' : 'The host declined your request'); return; }
+    if (m.t === 'offer' && typeof m.c === 'string') {
+      clearTimeout(offerTimer); st('Connecting\u2026');
+      try {
+        const ans = await ZNet.guestAnswer(m.c); await Relay.publish('zionrace-' + code + '-r', { t: 'answer', g: gid, c: ans.code });
+        const dc = await ans.dcp, peer = { pc: ans.pc, dc }; NET.peers = [peer]; attachPeer(peer); await waitOpen(dc, 30000);
+        netSend(peer, { t: 'h', n: (save.name || 'Racer').slice(0, 10) }); st('Connected! Waiting for the host\u2026'); done = true; if (NET.gh) { NET.gh.close(); NET.gh = null; }
+      } catch (e) { NET.lastErr = String(e && e.stack || e); fail('Could not connect. Same Wi-Fi?'); }
+    }
+  }, (s) => { if (s === 'open') openRes(true); });
+  if (!NET.gh) { fail('This browser cannot use quick join. Use offline pairing.'); return; }
+  const ok = await Promise.race([opened, new Promise((r) => setTimeout(() => r(false), 7000))]);
+  if (!ok) { fail('Cannot reach the internet relay. Use offline pairing.'); return; }
+  try { await Relay.publish('zionrace-' + code + '-r', { t: 'join', g: gid, n: (save.name || 'Racer').slice(0, 10) }); } catch (e) { fail('Could not send your request. Are you online?'); return; }
+  st('Waiting for the host to accept\u2026'); offerTimer = setTimeout(() => { if (!done) fail('The host did not answer'); }, 60000);
+}
+
 /* --- race UI wiring --- */
 on('raceBtn', () => { $('nameIn').value = save.name || ''; show('raceHome'); });
 on('rhBack', () => show('menu'));
-on('rhHost', () => { commitName(); netReset(); NET.role = 'host'; NET.meId = 0; const p = plr(0); p.n = save.name; p.k = save.skin; showLobby(); });
-on('rhJoin', () => { commitName(); netReset(); joinStart(); });
-on('hlAdd', hostAddPlayer);
+on('rhHost', () => { commitName(); netReset(); NET.role = 'host'; NET.meId = 0; const p = plr(0); p.n = save.name; p.k = save.skin; startRoom(); showLobby(); });
+on('rhJoin', () => { commitName(); netReset(); joinCodeStart(); });
+on('hlAdd', openRoom);
+on('hrOffline', hostAddPlayer); on('hrBack', showLobby);
+on('jcGo', () => joinRoom($('jcIn').value)); on('jcScan', joinStart); on('jcOffline', joinStart); on('jcBack', () => { netLeave(); startMenu(); });
+on('jpYes', () => answerJoinPop(true)); on('jpNo', () => answerJoinPop(false));
+$('jcIn').addEventListener('input', () => { $('jcIn').value = $('jcIn').value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
+$('jcIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') joinRoom($('jcIn').value); });
 on('hlPrev', () => { stepTrack(-1); netBroadcast(rosterMsg()); renderLobby(); });
 on('hlNext', () => { stepTrack(1); netBroadcast(rosterMsg()); renderLobby(); });
 on('hlVehPrev', () => { stepVeh(-1); netBroadcast(rosterMsg()); renderLobby(); });
@@ -2280,7 +2387,7 @@ on('haCopy', () => { if (NET.pending) copyText(NET.pending.text); });
 on('haPaste', () => { const c = prompt('Paste the reply code from your friend:'); if (c && NET.pending) hostFinish(NET.pending, c); });
 on('jfCancel', () => { netLeave(); startMenu(); });
 on('jfCopy', () => { if (NET.guestText) copyText(NET.guestText); });
-on('jfPaste', () => { const c = prompt('Paste the code from the host:'); if (c) joinWithCode(c); });
+on('jfPaste', () => { const c = prompt('Paste the code from the host:'); if (c) (c.trim().indexOf('ZR1|') === 0 ? joinRoom(c.trim().slice(4)) : joinWithCode(c)); });
 on('rrLobby', toLobby);
 on('rrLeave', () => { netLeave(); startMenu(); });
 $('nameIn').addEventListener('change', commitName);
@@ -2288,7 +2395,7 @@ $('nameIn').addEventListener('change', commitName);
 S.view = NEXTV[save.view] ? save.view : 'side'; $('viewBtn').textContent = VLAB[S.view];
 on('viewBtn', () => setView(NEXTV[S.view]));
 on('gaView', () => { setView(NEXTV[S.view]); buildGarage(); });
-const GAME_VERSION = 'v11'; $('ver').textContent = 'Zion: Adventure Rover \u2022 ' + GAME_VERSION;
+const GAME_VERSION = 'v13'; $('ver').textContent = 'Zion: Adventure Rover \u2022 ' + GAME_VERSION;
 setSoundUI(); setCoinTxt(); startMenu(); requestAnimationFrame(frame);
 window.__zion = { surf, askQuiz, getQ: () => Q, S, startLevel, inp, save, NET, drawPreview3D, SKINS };
 })();
